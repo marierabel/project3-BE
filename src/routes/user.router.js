@@ -57,7 +57,7 @@ router.post("/login", async (req, res, next) => {
     const authToken = jwt.sign({ email }, TOKEN_SECRET, {
       algorithm: "HS256",
       issuer: "proj3IH",
-      expiresIn: "2d",
+      expiresIn: "7d",
     });
 
     res.json({ authToken });
@@ -66,44 +66,21 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-router.get("/:userId", (req, res) => {
+router.get("/me", (req, res) => {
   res.json(req.user);
 });
 
-router.delete("/:userId", async (req, res) => {
+router.delete("/me", async (req, res) => {
   await User.deleteOne(req.user);
   res.sendStatus(204);
 });
 
-router.get("/:userId/lessons", async (req, res, next) => {
-  const { userId } = req.params;
-
-  if (!mongoose.isValidObjectId(userId)) {
-    handleNotFound(res);
-    return;
-  }
+router.get("/me/lessons", async (req, res, next) => {
+  const userId = req.user.id;
 
   try {
     const userLessons = await Lesson.find({ professor: userId });
     res.json(userLessons);
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get(":/userId/messages", async (req, res, next) => {
-  const { userId } = req.params;
-
-  if (!mongoose.isValidObjectId(userId)) {
-    handleNotFound(res);
-    return;
-  }
-  try {
-    const profMessage = Message.populate("lesson").professor;
-    const userMessages = await Message.find(
-      { student: userId } || { profMessage: userId }
-    );
-    res.json(userMessages);
   } catch (error) {
     next(error);
   }

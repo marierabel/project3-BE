@@ -6,7 +6,7 @@ const Message = require("../models/Message.model");
 const Lesson = require("../models/Lesson.model");
 const { handleNotFound } = require("../utils");
 
-router.post("/lessons", async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   const { title, content, professor, durationInMin, field, keyword } = req.body;
   try {
     const createdLesson = await Lesson.create({
@@ -39,26 +39,10 @@ router.get("/:lessonId", async (req, res, next) => {
   }
 });
 
-router.get("/lessons", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const allLessons = await Lesson.find();
     res.json(allLessons);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get("/:lessonId/messages", async (req, res, next) => {
-  const { lessonId } = req.params;
-
-  if (!mongoose.isValidObjectId(lessonId)) {
-    handleNotFound(res);
-    return;
-  }
-
-  try {
-    const messagesPerLesson = Message.find({ lesson: lessonId });
-    res.json(messagesPerLesson);
   } catch (err) {
     next(err);
   }
@@ -104,6 +88,6 @@ router.delete("/:lessonId", async (req, res, next) => {
   }
 });
 
-router.get("/:lessonId/validate");
+//router.get("/:lessonId/validate");
 
 module.exports = router;

@@ -17,9 +17,9 @@ app.use(cors({ origin: CORS_ORIGIN })); // enables CORS (Cross Origin Resource S
 app.get("/", (req, res) => {
   res.json({ message: "Hello World" });
 });
-app.use("/user", userRouter); // use humansRouter for all routes starting with "/humans"
-app.use("/lesson", lessonRouter); // use petsRouter for all routes starting with "/pets"
-app.use("/message", messageRouter);
+app.use("/users", userRouter); // use humansRouter for all routes starting with "/humans"
+app.use("/lessons", lessonRouter); // use petsRouter for all routes starting with "/pets"
+app.use("/", messageRouter);
 
 // error handling middlewares should always be last
 app.use(catchAll);
