@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
 const { Router } = require("express");
 const router = Router();
+const protectionMiddleware = require("../middlewares/protection.middlewares");
+const jwt = require("jsonwebtoken");
+const { TOKEN_SECRET } = require("../consts");
 
 const Message = require("../models/Message.model");
 const Lesson = require("../models/Lesson.model");
+
+router.use(protectionMiddleware);
 
 router.post("/lessons/:lessonId/message", async (req, res, next) => {
   const { title, content, envoy, student, readAt } = req.body;

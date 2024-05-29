@@ -1,18 +1,22 @@
 const mongoose = require("mongoose");
 const { Router } = require("express");
 const router = Router();
+const protectionMiddleware = require("../middlewares/protection.middlewares");
+const jwt = require("jsonwebtoken");
+const { TOKEN_SECRET } = require("../consts");
 
 const Message = require("../models/Message.model");
 const Lesson = require("../models/Lesson.model");
 const { handleNotFound } = require("../utils");
 
+router.use(protectionMiddleware);
 router.post("/", async (req, res, next) => {
-  const { title, content, professor, durationInMin, field, keyword } = req.body;
+  const { title, content, durationInMin, field, keyword } = req.body;
   try {
     const createdLesson = await Lesson.create({
       title,
       content,
-      professor,
+      professor: req.user.id,
       durationInMin,
       field,
       keyword,
@@ -49,7 +53,7 @@ router.get("/", async (req, res, next) => {
 });
 
 router.put("/:lessonId", async (req, res, next) => {
-  const { title, content, professor, durationInMin, field, keyword } = req.body;
+  const { title, content, durationInMin, field, keyword } = req.body;
   const { lessonId } = req.params;
 
   if (!mongoose.isValidObjectId(lessonId)) {
@@ -61,7 +65,7 @@ router.put("/:lessonId", async (req, res, next) => {
     const updatedLesson = await Lesson.findByIdAndUpdate(lessonId, {
       title,
       content,
-      professor,
+      professor: req.user.id,
       durationInMin,
       field,
       keyword,

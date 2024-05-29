@@ -1,11 +1,13 @@
 const mongoose = require("mongoose");
 const { Router } = require("express");
 const router = Router();
+const bcrypt = require("bcryptjs");
+const protectionMiddleware = require("../middlewares/protection.middlewares");
+const jwt = require("jsonwebtoken");
+const { TOKEN_SECRET } = require("../consts");
 
 const User = require("../models/User.model");
 const Lesson = require("../models/Lesson.model");
-const Message = require("../models/Message.model");
-const { handleNotFound } = require("../utils");
 
 router.post("/signup", async (req, res, next) => {
   const { email, password, name, pseudo, bio, tickets, lessonMarked } =
@@ -53,7 +55,7 @@ router.post("/login", async (req, res, next) => {
       res.status(401).json({ message: "Invalid credentials" });
       return;
     }
-
+    console.log(TOKEN_SECRET);
     const authToken = jwt.sign({ email }, TOKEN_SECRET, {
       algorithm: "HS256",
       issuer: "proj3IH",
@@ -65,6 +67,8 @@ router.post("/login", async (req, res, next) => {
     next(err);
   }
 });
+
+router.use(protectionMiddleware);
 
 router.get("/me", (req, res) => {
   res.json(req.user);
