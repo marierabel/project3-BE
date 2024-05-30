@@ -56,7 +56,21 @@ router.get("/me/messages", async (req, res, next) => {
   let messages;
   try {
     if (messageType === "professor") {
-      messages = await Message.find({ lesson: { professor: userId } });
+      messages = await Lesson.aggregate([
+        {
+          $match: {
+            prof: profId,
+          },
+        },
+        {
+          $lookup: {
+            from: "messages",
+            localField: "_id",
+            foreignField: "lesson",
+            as: "messages",
+          },
+        },
+      ]);
     } else if (messageType === "student") {
       messages = await Message.find({ student: userId });
     }
