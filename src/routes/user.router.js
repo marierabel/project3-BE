@@ -10,8 +10,7 @@ const User = require("../models/User.model");
 const Lesson = require("../models/Lesson.model");
 
 router.post("/signup", async (req, res, next) => {
-  const { email, password, name, pseudo, bio, tickets, lessonMarked } =
-    req.body;
+  const { email, password, name, pseudo, bio, lessonMarked } = req.body;
 
   const salt = await bcrypt.genSalt();
   const hashedPassword = await bcrypt.hash(password, salt);
@@ -23,7 +22,7 @@ router.post("/signup", async (req, res, next) => {
       name,
       pseudo,
       bio,
-      tickets,
+      tickets: 2,
       lessonMarked,
     });
 

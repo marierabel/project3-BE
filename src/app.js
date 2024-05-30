@@ -13,7 +13,7 @@ const app = express();
 
 app.use(logger("dev")); // logs requests to the console
 app.use(express.json()); // parses JSON request body
-//app.use(cors({ origin: CORS_ORIGIN })); // enables CORS (Cross Origin Resource Sharing) for all requests
+app.use(cors()); // enables CORS (Cross Origin Resource Sharing) for all requests
 
 app.get("/", (req, res) => {
   res.json({ message: "Hello World" });

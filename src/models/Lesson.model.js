@@ -46,7 +46,7 @@ const lessonSchema = new Schema({
     default: undefined,
     required: [true, "keyword is required"],
     validate: {
-      validator: (keys) => keys.length <= 4 && keys.length > 1,
+      validator: (keys) => keys.length <= 4 && keys.length > 0,
       message: "1 keyword is required (max. 4 keywords)", // error message if validation fails
     },
   },
