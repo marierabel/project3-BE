@@ -5,8 +5,8 @@ const protectionMiddleware = require("../middlewares/protection.middlewares");
 const jwt = require("jsonwebtoken");
 const { TOKEN_SECRET } = require("../consts");
 
-const Message = require("../models/Message.model");
 const Lesson = require("../models/Lesson.model");
+const Conversation = require("../models/Conversation.model");
 const { handleNotFound } = require("../utils");
 
 router.use(protectionMiddleware);
@@ -87,6 +87,27 @@ router.delete("/:lessonId", async (req, res, next) => {
   try {
     await Lesson.findByIdAndDelete(lessonId);
     res.sendStatus(204);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/:lessonId/conversation", async (req, res, next) => {
+  const { lessonId } = req.params;
+  const userId = req.user.id;
+
+  if (!mongoose.isValidObjectId(lessonId)) {
+    handleNotFound(res);
+    return;
+  }
+
+  try {
+    const newConversation = await Conversation.create({
+      title: "title",
+      student: userId,
+      lesson: lessonId,
+    });
+    res.status(201).json(newConversation);
   } catch (err) {
     next(err);
   }

@@ -6,79 +6,125 @@ const jwt = require("jsonwebtoken");
 const { TOKEN_SECRET } = require("../consts");
 
 const Message = require("../models/Message.model");
+const Conversation = require("../models/Conversation.model");
 const Lesson = require("../models/Lesson.model");
+const { handleNotFound } = require("../utils");
 
 router.use(protectionMiddleware);
 
-router.post("/lessons/:lessonId/message", async (req, res, next) => {
-  const { title, content, envoy, student, readAt } = req.body;
-  const { lessonId } = req.params;
+router.post(
+  "/conversations/:conversationId/messages",
+  async (req, res, next) => {
+    const { content } = req.body;
+    const { conversationId } = req.params;
+    const userId = req.user.id;
 
-  if (!mongoose.isValidObjectId(lessonId)) {
-    handleNotFound(res);
-    return;
+    if (!mongoose.isValidObjectId(conversationId)) {
+      handleNotFound(res);
+      return;
+    }
+
+    try {
+      const newMessage = await Message.create({
+        content,
+        author: userId,
+        conversation: conversationId,
+        readAt: null,
+      });
+      res.status(201).json(newMessage);
+    } catch (err) {
+      next(err);
+    }
   }
+);
 
-  try {
-    const newMessage = await Message.create({
-      title,
-      content,
-      envoy,
-      student,
-      lesson: lessonId,
-      readAt,
-    });
-    res.status(201).json(newMessage);
-  } catch (err) {
-    next(err);
+router.get(
+  "/conversations/:conversationId/messages",
+  async (req, res, next) => {
+    const { conversationId } = req.params;
+
+    if (!mongoose.isValidObjectId(conversationId)) {
+      handleNotFound(res);
+      return;
+    }
+
+    try {
+      const messagesPerLesson = await Message.find({
+        conversation: conversationId,
+      });
+      console.log(messagesPerLesson);
+      res.json(messagesPerLesson);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
 
-router.get("/lessons/:lessonId/messages", async (req, res, next) => {
-  const { lessonId } = req.params;
-
-  if (!mongoose.isValidObjectId(lessonId)) {
-    handleNotFound(res);
-    return;
-  }
-
-  try {
-    const messagesPerLesson = Message.find({ lesson: lessonId });
-    res.json(messagesPerLesson);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get("/me/messages", async (req, res, next) => {
+router.get("/me/conversations", async (req, res, next) => {
   const userId = req.user.id;
   const { messageType } = req.query;
-  let messages;
+  let conversations;
   try {
     if (messageType === "professor") {
-      messages = await Lesson.aggregate([
+      const lessons = await Lesson.aggregate([
         {
           $match: {
-            prof: profId,
+            professor: userId,
           },
         },
         {
           $lookup: {
-            from: "messages",
+            from: "conversations",
             localField: "_id",
             foreignField: "lesson",
-            as: "messages",
+            as: "conversations",
           },
         },
       ]);
+      conversations = lessons.map((lesson) => {
+        return lesson.conversations;
+      });
     } else if (messageType === "student") {
-      messages = await Message.find({ student: userId });
+      conversations = await Conversation.find({ student: userId });
     }
-    res.json(messages);
+    res.json(conversations);
   } catch (error) {
     next(error);
   }
 });
+
+// router.get("/me/messages", async (req, res, next) => {
+//   const userId = req.user.id;
+//   const { messageType } = req.query;
+//   let messages;
+//   try {
+//     if (messageType === "professor") {
+//       const lessons = await Lesson.aggregate([
+//         {
+//           $match: {
+//             professor: userId,
+//           },
+//         },
+//         {
+//           $lookup: {
+//             from: "messages",
+//             localField: "_id",
+//             foreignField: "lesson",
+//             as: "messages",
+//           },
+//         },
+//       ]);
+//       messages = lessons.map((lesson) => {
+//         return lesson.messages;
+//       });
+//     } else if (messageType === "student") {
+//       messages = await Message.find({ student: userId });
+//     }
+//     res.json(messages);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 //router.put("/:messageId");
 
