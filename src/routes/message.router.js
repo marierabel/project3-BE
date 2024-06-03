@@ -52,13 +52,30 @@ router.get(
       const messagesPerConv = await Message.find({
         conversation: conversationId,
       });
-      console.log(messagesPerConv);
       res.json(messagesPerConv);
     } catch (err) {
       next(err);
     }
   }
 );
+
+router.get("/conversations/:conversationId", async (req, res, next) => {
+  const { conversationId } = req.params;
+  console.log(conversationId, "id");
+
+  if (!mongoose.isValidObjectId(conversationId)) {
+    handleNotFound(res);
+    return;
+  }
+
+  try {
+    const oneConversation = await Conversation.findById(conversationId);
+    console.log(oneConversation, "conv");
+    res.json(oneConversation);
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get("/me/conversations", async (req, res, next) => {
   const userId = req.user.id;
@@ -100,45 +117,11 @@ router.get("/me/conversations", async (req, res, next) => {
       //   },
       // ]);
     } else if (messageType === "student") {
-      console.log(userId);
       conversations = await Conversation.find({ student: userId }).populate({
         path: "lesson",
         populate: { path: "professor" },
       });
-      //   conversations = await Conversation.aggregate([
-      //     {
-      //       $match: {
-      //         student: userId,
-      //       },
-      //     },
-      //     {
-      //       $lookup: {
-      //         from: "lessons",
-      //         localField: "lesson",
-      //         foreignField: "_id",
-      //         as: "lesson",
-      //       },
-      //     },
-      //     {
-      //       $unwind: "$lesson",
-      //     },
-      //     {
-      //       $lookup: {
-      //         from: "users",
-      //         localField: "lesson.professor",
-      //         foreignField: "_id",
-      //         as: "professor",
-      //       },
-      //     },
-      //     {
-      //       $unwind: "$professor",
-      //     },
-      //     {
-      //       $unset: "professor.password",
-      //     },
-      //   ]);
     }
-    console.log(conversations);
     res.json(conversations);
   } catch (error) {
     next(error);
