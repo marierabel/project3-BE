@@ -7,6 +7,12 @@ const conversationSchema = new Schema({
     ref: "User",
     required: [true, "user is required"],
   },
+  professorId: {
+    type: Schema.Types.ObjectId,
+    ref: "Professor",
+    required: [true, "user is required"],
+  },
+  professorPseudo: { type: String },
   lesson: {
     type: Schema.Types.ObjectId,
     ref: "Lesson",

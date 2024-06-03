@@ -46,7 +46,7 @@ router.get("/:lessonId", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const allLessons = await Lesson.find();
+    const allLessons = await Lesson.find().populate("professor");
     res.json(allLessons);
   } catch (err) {
     next(err);
@@ -102,18 +102,18 @@ router.post("/:lessonId/conversation", async (req, res, next) => {
     return;
   }
 
-  const user = await User.aggregate([
-    {
-      $match: {
-        _id: { $eq: { $toObjectId: userId } },
-      },
-    },
-  ]);
+  const lessonConcerned = await Lesson.find({ _id: lessonId }).populate(
+    "professor"
+  );
+  const prof = lessonConcerned[0].professor;
+  console.log(lessonConcerned, lessonConcerned[0].title, "test titre");
 
   try {
     const newConversation = await Conversation.create({
-      title: `from ${user.pseudo} for`,
+      title: lessonConcerned[0].title,
       student: userId,
+      professorId: prof._id,
+      professorPseudo: prof.pseudo,
       lesson: lessonId,
     });
     res.status(201).json(newConversation);

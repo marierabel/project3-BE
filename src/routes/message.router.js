@@ -66,27 +66,79 @@ router.get("/me/conversations", async (req, res, next) => {
   let conversations;
   try {
     if (messageType === "professor") {
-      const lessons = await Lesson.aggregate([
-        {
-          $match: {
-            professor: userId,
-          },
-        },
-        {
-          $lookup: {
-            from: "conversations",
-            localField: "_id",
-            foreignField: "lesson",
-            as: "conversations",
-          },
-        },
-      ]);
-      conversations = lessons.map((lesson) => {
-        return lesson.conversations;
-      });
+      conversations = await Conversation.find({ professorId: userId });
+      // const lessons = await Lesson.aggregate([
+      //   {
+      //     $match: {
+      //       professor: userId,
+      //     },
+      //   },
+      //   {
+      //     $lookup: {
+      //       from: "conversations",
+      //       localField: "_id",
+      //       foreignField: "lesson",
+      //       as: "conversations",
+      //     },
+      //   },
+      //   {
+      //     $unwind: "$conversations",
+      //   },
+      //   {
+      //     $lookup: {
+      //       from: "users",
+      //       localField: "conversations.student",
+      //       foreignField: "_id",
+      //       as: "student",
+      //     },
+      //   },
+      //   {
+      //     $unwind: "$student",
+      //   },
+      //   {
+      //     $unset: "student.password",
+      //   },
+      // ]);
     } else if (messageType === "student") {
-      conversations = await Conversation.find({ student: userId });
+      console.log(userId);
+      conversations = await Conversation.find({ student: userId }).populate({
+        path: "lesson",
+        populate: { path: "professor" },
+      });
+      //   conversations = await Conversation.aggregate([
+      //     {
+      //       $match: {
+      //         student: userId,
+      //       },
+      //     },
+      //     {
+      //       $lookup: {
+      //         from: "lessons",
+      //         localField: "lesson",
+      //         foreignField: "_id",
+      //         as: "lesson",
+      //       },
+      //     },
+      //     {
+      //       $unwind: "$lesson",
+      //     },
+      //     {
+      //       $lookup: {
+      //         from: "users",
+      //         localField: "lesson.professor",
+      //         foreignField: "_id",
+      //         as: "professor",
+      //       },
+      //     },
+      //     {
+      //       $unwind: "$professor",
+      //     },
+      //     {
+      //       $unset: "professor.password",
+      //     },
+      //   ]);
     }
+    console.log(conversations);
     res.json(conversations);
   } catch (error) {
     next(error);
