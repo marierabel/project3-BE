@@ -37,6 +37,7 @@ const lessonSchema = new Schema({
       "IT",
       "danse",
       "repair",
+      "e-sport",
       "other",
     ],
     required: [true],

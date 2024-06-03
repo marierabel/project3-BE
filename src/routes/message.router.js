@@ -49,11 +49,11 @@ router.get(
     }
 
     try {
-      const messagesPerLesson = await Message.find({
+      const messagesPerConv = await Message.find({
         conversation: conversationId,
       });
-      console.log(messagesPerLesson);
-      res.json(messagesPerLesson);
+      console.log(messagesPerConv);
+      res.json(messagesPerConv);
     } catch (err) {
       next(err);
     }

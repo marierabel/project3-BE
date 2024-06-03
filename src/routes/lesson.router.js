@@ -5,6 +5,7 @@ const protectionMiddleware = require("../middlewares/protection.middlewares");
 const jwt = require("jsonwebtoken");
 const { TOKEN_SECRET } = require("../consts");
 
+const User = require("../models/User.model");
 const Lesson = require("../models/Lesson.model");
 const Conversation = require("../models/Conversation.model");
 const { handleNotFound } = require("../utils");
@@ -101,9 +102,17 @@ router.post("/:lessonId/conversation", async (req, res, next) => {
     return;
   }
 
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: { $eq: { $toObjectId: userId } },
+      },
+    },
+  ]);
+
   try {
     const newConversation = await Conversation.create({
-      title: "title",
+      title: `from ${user.pseudo} for`,
       student: userId,
       lesson: lessonId,
     });

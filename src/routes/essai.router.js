@@ -5,11 +5,20 @@ const protectionMiddleware = require("../middlewares/protection.middlewares");
 const jwt = require("jsonwebtoken");
 const { TOKEN_SECRET } = require("../consts");
 
-const Message = require("../models/Message.model");
+const User = require("../models/User.model");
 const Lesson = require("../models/Lesson.model");
 const Conversation = require("../models/Conversation.model");
 
 router.use(protectionMiddleware);
+
+router.post("/conversation/:conversationId", async (req, res, next) => {
+  const { conversationId } = req.params;
+
+  if (!mongoose.isValidObjectId(conversationId)) {
+    handleNotFound(res);
+    return;
+  }
+});
 
 router.post("/lessons/:lessonId/conversation", async (req, res, next) => {
   const { lessonId } = req.params;
@@ -20,9 +29,17 @@ router.post("/lessons/:lessonId/conversation", async (req, res, next) => {
     return;
   }
 
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: userId,
+      },
+    },
+  ]);
+
   try {
     const newConversation = await Conversation.create({
-      title: "title",
+      title: `from ${user.pseudo} for`,
       student: userId,
       lesson: lessonId,
     });
