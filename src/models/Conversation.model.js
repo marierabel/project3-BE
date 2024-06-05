@@ -20,6 +20,6 @@ const conversationSchema = new Schema({
   },
 });
 
-const Conversation = model("conversation", conversationSchema);
+const Conversation = model("Conversation", conversationSchema);
 
 module.exports = Conversation;

@@ -7,6 +7,8 @@ const { TOKEN_SECRET } = require("../consts");
 
 const Message = require("../models/Message.model");
 const Conversation = require("../models/Conversation.model");
+const Validation = require("../models/Validation.model");
+const User = require("../models/User.model");
 const Lesson = require("../models/Lesson.model");
 const { handleNotFound } = require("../utils");
 
@@ -49,10 +51,13 @@ router.get(
     }
 
     try {
+      const convValidation = await Validation.find({ conversationId }).sort(
+        "-createdAt"
+      );
       const messagesPerConv = await Message.find({
         conversation: conversationId,
       });
-      res.json(messagesPerConv);
+      res.json({ messages: messagesPerConv, validations: convValidation });
     } catch (err) {
       next(err);
     }
@@ -61,7 +66,6 @@ router.get(
 
 router.get("/conversations/:conversationId", async (req, res, next) => {
   const { conversationId } = req.params;
-  console.log(conversationId, "id");
 
   if (!mongoose.isValidObjectId(conversationId)) {
     handleNotFound(res);
@@ -70,7 +74,7 @@ router.get("/conversations/:conversationId", async (req, res, next) => {
 
   try {
     const oneConversation = await Conversation.findById(conversationId);
-    console.log(oneConversation, "conv");
+
     res.json(oneConversation);
   } catch (err) {
     next(err);
@@ -125,6 +129,94 @@ router.get("/me/conversations", async (req, res, next) => {
     res.json(conversations);
   } catch (error) {
     next(error);
+  }
+});
+
+router.post("/:conversationId/appointment", async (req, res, next) => {
+  const { conversationId } = req.params;
+
+  if (!mongoose.isValidObjectId(conversationId)) {
+    handleNotFound(res);
+    return;
+  }
+
+  try {
+    const newAppointment = await Validation.create({
+      conversationId: conversationId,
+      profValidation: false,
+      studValidation: false,
+    });
+    res.status(201).json(newAppointment);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/:conversationId/appointment", async (req, res, next) => {
+  const { conversationId } = req.params;
+  const { profValidation, studValidation } = req.body;
+
+  if (!mongoose.isValidObjectId(conversationId)) {
+    handleNotFound(res);
+    return;
+  }
+
+  try {
+    const appointment = await Validation.findOne({
+      conversationId: conversationId,
+    }).populate("conversationId");
+    const appointmentId = appointment._id;
+    if (appointment.profValidation && appointment.studValidation) {
+      return res.sendStatus(204);
+    }
+
+    const updatedAppointment = await Validation.findByIdAndUpdate(
+      appointmentId,
+      {
+        profValidation,
+        studValidation,
+      },
+      { new: true }
+    );
+
+    if (
+      updatedAppointment.profValidation &&
+      updatedAppointment.studValidation
+    ) {
+      await User.findByIdAndUpdate(appointment.conversationId.student, {
+        $inc: { tickets: -1 },
+      });
+      console.log(appointment.conversationId.student);
+      await User.findByIdAndUpdate(appointment.conversationId.professorId, {
+        $inc: { tickets: 1 },
+      });
+    }
+    res.status(201).json(updatedAppointment);
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
+
+router.delete("/:conversationId/appointment", async (req, res, next) => {
+  const { conversationId } = req.params;
+
+  if (!mongoose.isValidObjectId(conversationId)) {
+    handleNotFound(res);
+    return;
+  }
+
+  const appointment = await Validation.findOne({
+    conservationId: conversationId,
+  });
+  console.log(appointment);
+  const appointmentId = appointment._id;
+
+  try {
+    await Validation.findByIdAndDelete(appointmentId);
+    res.sendStatus(204);
+  } catch (err) {
+    next(err);
   }
 });
 
